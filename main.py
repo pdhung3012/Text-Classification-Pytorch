@@ -8,7 +8,7 @@ import torch.optim as optim
 import numpy as np
 from models.LSTM import LSTMClassifier
 
-TEXT, vocab_size, word_embeddings, train_iter, valid_iter, test_iter = load_data.load_dataset()
+TEXT, vocab_size, word_embeddings, train_iter, valid_iter, test_iter = load_data.load_dataset_customize()
 
 def clip_gradient(model, clip_value):
     params = list(filter(lambda p: p.grad is not None, model.parameters()))
@@ -25,12 +25,16 @@ def train_model(model, train_iter, epoch):
     for idx, batch in enumerate(train_iter):
         text = batch.text[0]
         target = batch.label
+        # print('text {}'.format(text))
+        # print('label {}'.format(target))
         target = torch.autograd.Variable(target).long()
         if torch.cuda.is_available():
             text = text.cuda()
             target = target.cuda()
-        if (text.size()[0] is not 32):# One of the batch returned by BucketIterator has length different than 32.
-            continue
+        print('text {} {}'.format(len(text),len(target)))
+        input('text ')
+        # if (text.size()[0] is not 32):# One of the batch returned by BucketIterator has length different than 32.
+        #     continue
         optim.zero_grad()
         prediction = model(text)
         loss = loss_fn(prediction, target)
@@ -55,9 +59,10 @@ def eval_model(model, val_iter):
     model.eval()
     with torch.no_grad():
         for idx, batch in enumerate(val_iter):
-            text = batch.text[0]
-            if (text.size()[0] is not 32):
-                continue
+            text = batch.text
+
+            # if (text.size()[0] is not 32):
+            #     continue
             target = batch.label
             target = torch.autograd.Variable(target).long()
             if torch.cuda.is_available():
@@ -75,9 +80,9 @@ def eval_model(model, val_iter):
 
 learning_rate = 2e-5
 batch_size = 32
-output_size = 2
+output_size = 22
 hidden_size = 256
-embedding_length = 300
+embedding_length = 100
 
 model = LSTMClassifier(batch_size, output_size, hidden_size, vocab_size, embedding_length, word_embeddings)
 loss_fn = F.cross_entropy
