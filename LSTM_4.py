@@ -144,10 +144,12 @@ criterion = nn.BCELoss()
 # define metric
 def binary_accuracy(preds, y):
     # round predictions to the closest integer
+
     rounded_preds = torch.round(preds)
 
     correct = (rounded_preds == y).float()
     acc = correct.sum() / len(correct)
+    print('round_preds {}\nacc {}'.format(rounded_preds,type(acc)))
     return acc
 
 

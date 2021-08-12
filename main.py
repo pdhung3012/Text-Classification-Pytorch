@@ -8,7 +8,7 @@ import torch.optim as optim
 import numpy as np
 from models.LSTM import LSTMClassifier
 
-TEXT, vocab_size, word_embeddings, train_iter, valid_iter, test_iter = load_data.load_dataset_customize()
+TEXT, vocab_size, word_embeddings, train_iter, valid_iter, test_iter = load_data.load_dataset()
 
 def clip_gradient(model, clip_value):
     params = list(filter(lambda p: p.grad is not None, model.parameters()))

@@ -73,7 +73,7 @@ all_data = train_data + valid_data + test_data
 #Cuda algorithms
 torch.backends.cudnn.deterministic = True
 TEXT = data.Field(tokenize='spacy',batch_first=True,include_lengths=True)
-LABEL = data.LabelField(dtype = torch.float,batch_first=True,use_vocab=True)
+LABEL = data.LabelField(dtype = torch.long,batch_first=True,use_vocab=True)
 fields = [('label', LABEL),('text',TEXT)]
 #loading custom dataset
 train_data=data.TabularDataset(path =fpTrain,format = 'csv',fields = fields,skip_header = True)
@@ -101,7 +101,11 @@ print("Size of LABEL vocabulary:",len(LABEL.vocab))
 print(TEXT.vocab.freqs.most_common(10))
 
 #Word dictionary
-print(TEXT.vocab.stoi)
+# print(TEXT.vocab.stoi)
+print(LABEL.vocab.itos)
+print(LABEL.vocab.stoi)
+num_classes=len(LABEL.vocab.itos)
+# input('label')
 #check whether cuda is available
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -171,7 +175,7 @@ class classifier(nn.Module):
 size_of_vocab = len(TEXT.vocab)
 embedding_dim = 100
 num_hidden_nodes = 32
-num_output_nodes = 1
+num_output_nodes = num_classes
 num_layers = 2
 bidirection = True
 dropout = 0.2
@@ -201,15 +205,21 @@ import torch.optim as optim
 
 # define optimizer and loss
 optimizer = optim.Adam(model.parameters())
-criterion = nn.BCELoss()
+criterion = nn.CrossEntropyLoss()
 
 
 # define metric
-def binary_accuracy(preds, y):
+def multiclass_accuracy(preds, y):
     # round predictions to the closest integer
-    rounded_preds = torch.round(preds)
+    # torch.argmax(preds)
+    # selectedIndex=preds.
+    # print('preds {} lenPreds {}'.format(preds,type(preds)))
+    # print('y {} lenY {}'.format(y, len(y)))
+    # print('argmax_preds {} '.format(argmax_preds))
+    argmax_preds=torch.argmax(preds, dim=1)
+    # print('argmax_preds {} '.format(argmax_preds))
 
-    correct = (rounded_preds == y).float()
+    correct = (argmax_preds == y).float()
     acc = correct.sum() / len(correct)
     return acc
 
@@ -242,7 +252,7 @@ def train(model, iterator, optimizer, criterion):
         loss = criterion(predictions, batch.label)
 
         # compute the binary accuracy
-        acc = binary_accuracy(predictions, batch.label)
+        acc = multiclass_accuracy(predictions, batch.label)
 
         # backpropage the loss and compute the gradients
         loss.backward()
@@ -276,7 +286,7 @@ def evaluate(model, iterator, criterion):
 
             # compute loss and accuracy
             loss = criterion(predictions, batch.label)
-            acc = binary_accuracy(predictions, batch.label)
+            acc = multiclass_accuracy(predictions, batch.label)
 
             # keep track of loss and accuracy
             epoch_loss += loss.item()
@@ -285,7 +295,7 @@ def evaluate(model, iterator, criterion):
     return epoch_loss / len(iterator), epoch_acc / len(iterator)
 
 
-N_EPOCHS = 5
+N_EPOCHS = 100
 best_valid_loss = float('inf')
 
 for epoch in range(N_EPOCHS):
