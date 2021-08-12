@@ -295,7 +295,7 @@ def evaluate(model, iterator, criterion):
     return epoch_loss / len(iterator), epoch_acc / len(iterator)
 
 
-N_EPOCHS = 100
+N_EPOCHS = 30
 best_valid_loss = float('inf')
 
 for epoch in range(N_EPOCHS):
